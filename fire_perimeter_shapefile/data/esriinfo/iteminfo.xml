@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ESRI_ItemInformation Culture='en-US'>
+<name>e51f4a5d065f4df3950abe249da240af</name>
+<guid>2C67F698-6F15-41B8-B931-6973C7B81535</guid>
+<catalogpath></catalogpath>
+<snippet></snippet>
+<description>&lt;div&gt;&lt;div&gt;&lt;div&gt;&lt;p&gt; Version Information: &lt;/p&gt;&lt;p&gt; The data is updated yearly with fire perimeters from the previous fire season. &lt;/p&gt;&lt;p&gt; Fire18_1 was released May 1st, 2019. 413 wildfires from the 2018 fire season were added to the database. There are two fires on BIA managed land that do not have 3 letter code identifiers and thus &quot;Unit&quot; was left blank. A hand drawn perimeter of the 1990 San Juan Canyon fire in BEU was submitted by a fire fighter who worked on the fire. The perimeter of the Thomas fire of 2017 was replaced this year by one collected by SBC that is based on someone walking some parts of the perimeter for better accuracy. &lt;/p&gt;&lt;p&gt; ______________________________________________________________________________ &lt;/p&gt;&lt;p&gt; CAL FIRE (including c  ontract counties)  , USDA Forest Service Region 5, USDI Bureau of Land Managment &amp;amp; National Park Service, and other agencies jointly maintain a comprehensive fire perimeter GIS layer for public and private lands throughout the state. The data covers fires back to 1878. Detailed metadata is provided for each individual feature class.  &lt;/p&gt;&lt;p&gt; ________________________________________________________________________________ &lt;/p&gt;&lt;p&gt; Historic Update Information: &lt;/p&gt;&lt;p&gt; Fire17_1 was released April 13th, 2018. 612 wildfires from the 2017 fire season were added to the database. Three USFS wildfires from previous years were also added (1 from 2014, and 2 from 2016). Attributes from 3 USFS wildfires were also corrected (Willow 2015, Gilman and Meadow 2016). Two new USFS Forest were added to the domain list of Units (Rogue River-Siskiyou NF &amp;amp; Fremont NF).The Barry Point Fire is now attributed to the Rogue River-Siskiyou, previoulsy it was attributed to other (as a unit). There are two fires for 2018 already in the database. &lt;/p&gt;&lt;p&gt; Fire16_1 was released May 4nd, 2017. I 2014 VNC fire perimeter was replaced by a more accurate version. 3 new periemters from 2014 were added (VNC). A new periemter from 2013 added. 66 new perimeters from 2015 were added. 92 new periemters in Marin County, from 1917 to 1934 were added. They were hand drawn by the Marin County fire Chief Garber and digitized and submitted by NPS. 8 duplicate fire perimeters were deleted. &lt;/p&gt;&lt;p&gt; Fire15_1 was released June 9th, 2016. The ALARM_DATE and CONT_DATE fields have been changed from STRING fields to DATE fields. In the many cases where only the year of a fire existed (ex. 19170000) the tool couldn&apos;t process the data and the entry is NULL. In those cases, the year can be found in the YEAR field. &lt;/p&gt;&lt;p&gt; Fire14_1 was released in May, 2015. After release, the NPS supplied corretions for 14 wildfires and 67 prescribed burns. The corrected data was posted to FRAP&apos;s data download page as fire14_1 in late May.  &lt;/p&gt;&lt;p&gt; Fire 14_2 was released in July, 2015 to reflect that changes had been made to the original release in late May. Version 14_1 from late May is an exact copy of version 14_2 released in July.  &lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+
+This dataset was uploaded to Data Basin and is available with additional information at: /datasets/e51f4a5d065f4df3950abe249da240af</description>
+<summary></summary>
+<title>e51f4a5d065f4df3950abe249da240af</title>
+<tags></tags>
+<type>Layer Package</type>
+<typekeywords>
+<typekeyword>Shapefile Feature Class</typekeyword>
+<typekeyword>Layer Package</typekeyword>
+<typekeyword>Data</typekeyword>
+<typekeyword>ArcMap</typekeyword>
+<typekeyword>ArcGlobe</typekeyword>
+<typekeyword>ArcGIS Explorer</typekeyword>
+<typekeyword>lpk</typekeyword>
+</typekeywords>
+<thumbnail>thumbnail/thumbnail.png</thumbnail>
+<documentation></documentation>
+<url></url>
+<datalastmodifiedtime></datalastmodifiedtime>
+<extent>
+<xmin>-121.782015700481</xmin>
+<ymin>39.5968906729107</ymin>
+<xmax>-121.348266768532</xmax>
+<ymax>39.9001372352141</ymax>
+</extent>
+<spatialreference>NAD_1983_California_Teale_Albers</spatialreference>
+<accessinformation>CAL FIRE, CAL FIRE</accessinformation>
+<licenseinfo></licenseinfo>
+</ESRI_ItemInformation>
