@@ -219,13 +219,12 @@ for idx, row in infrastructure_gdf.iterrows():
             })
             
 # Convert the event log to a DataFrame and sort by time
-event_log_df = pd.DataFrame(event_log)
-event_log_df = event_log_df.sort_values(by=["Timestamp", "Case_ID"]).reset_index(drop=True)
-
-print(event_log_df.head())
+event_log_baseline = pd.DataFrame(event_log)
+event_log_baseline = event_log_baseline.sort_values(by=["Timestamp", "Case_ID"]).reset_index(drop=True)
+event_log_baseline["Scenario"] = "baseline"
 
 # Save the event log
-event_log_df.to_csv("fire_simulation_event_log.csv", index=False)
+event_log_baseline.to_csv("fire_simulation_event_log.csv", index=False)
 
 # --- Generate Empirical Flammability Scores Using Destruction Data ---
 # In this section, we will calculate empirical flammability scores based on which structures were damaged to what extent and what materials they were made of.
@@ -314,7 +313,7 @@ from folium import GeoJson
 
 # Initial map generation showed an interactive but under-optimized map that ran slow.
 # Following code only visualizes the most significant (latest) event for each structure to tackle this performance issue.
-latest_events = event_log_df.sort_values('Timestamp').drop_duplicates('Case_ID', keep='last')
+latest_events = event_log_baseline.sort_values('Timestamp').drop_duplicates('Case_ID', keep='last')
 
 # Merge geometry with event log
 geo_events = latest_events.merge(
@@ -393,7 +392,6 @@ m.save("fire_simulation_timeline_map.html")
 from shapely.geometry import mapping
 from shapely.ops import unary_union
 from folium.plugins import TimestampedGeoJson
-import folium
 
 fire_progression_gdf['Fire_Timestamp'] = fire_progression_gdf['Fire_Timestamp'].apply(
     lambda dt: dt.replace(year=2018) if pd.notnull(dt) else pd.NaT
@@ -466,3 +464,165 @@ TimestampedGeoJson(
 ).add_to(m)
 
 m.save("fire_area_progression_map.html")
+
+# --- Modular Simulation Function ---
+# We create a modular simulation function that allows us to modify structure variables to run what-if scenarios.
+
+def simulate_fire_impact(
+    infra_gdf,
+    flammability_column='Composite_Flammability',
+    spread_rate=20, # m/min
+    scenario_name="baseline"
+):
+    
+    # Calculate the delay and arrival time
+    infra = infra_gdf.copy()
+    if "Simulated_Fire_Arrival_Time" not in infra.columns:
+        infra['Fire_Delay_Minutes'] = infra['Distance_To_FirePoint'] / spread_rate
+        infra['Simulated_Fire_Arrival_Time'] = infra.apply(
+            lambda row: row['Fire_Arrival_Time'] + pd.to_timedelta(row['Fire_Delay_Minutes'], unit='m')
+            if pd.notnull(row['Fire_Arrival_Time']) else pd.NaT,
+            axis=1
+        )
+        
+    # Generate event log
+    event_log = []
+    
+    for idx, row in infra.iterrows():
+        structure_id = row['OBJECTID']
+        arrival_time = row['Simulated_Fire_Arrival_Time']
+        flammability = row.get(flammability_column, 0.5)
+        
+        if pd.notnull(arrival_time):
+            # Fire arrival
+            event_log.append({
+                "Case_ID": structure_id,
+                "Timestamp": arrival_time,
+                "Event": "Fire_Arrival",
+                "Scenario": scenario_name,
+                "Flammability_Score": round(flammability, 2)
+            })
+
+            # Ignition chance
+            if random.random() < flammability:
+                ignition_time = arrival_time + timedelta(minutes=random.randint(5, 30))
+                event_log.append({
+                    "Case_ID": structure_id,
+                    "Timestamp": ignition_time,
+                    "Event": "Ignition",
+                    "Scenario": scenario_name,
+                    "Flammability_Score": round(flammability, 2)
+                })
+
+                destruction_time = ignition_time + timedelta(minutes=random.randint(5, 90))
+                event_log.append({
+                    "Case_ID": structure_id,
+                    "Timestamp": destruction_time,
+                    "Event": "Destroyed",
+                    "Scenario": scenario_name,
+                    "Flammability_Score": round(flammability, 2)
+                })
+
+    # Create event log DataFrame
+    event_log_df = pd.DataFrame(event_log).sort_values(by=["Timestamp", "Case_ID"]).reset_index(drop=True)
+
+    return event_log_df
+
+# --- What-If Scenario: All Ignition-Resistant Siding ---
+
+# Copy the original infrastructure data
+infra_ir_siding = infrastructure_gdf.copy()
+infra_ir_siding['Composite_Flammability'] = 0.2
+
+# Run the simulation for the Ignition-Resistant Siding scenario
+event_log_ir_siding = simulate_fire_impact(
+    infra_ir_siding,
+    flammability_column='Composite_Flammability',
+    scenario_name="all_ignition_resistant_siding"
+)
+
+# Compare the baseline and Ignition-Resistant Siding scenarios
+event_log_combined = pd.concat([event_log_baseline, event_log_ir_siding])
+summary_destruction_by_scenario = (
+    event_log_combined[event_log_combined['Event'] == 'Destroyed']
+    .groupby("Scenario")["Case_ID"]
+    .nunique()
+    .reset_index(name="Structures_Destroyed")
+)
+
+print("\nDestruction Summary:")
+print(summary_destruction_by_scenario)
+
+event_log_combined.to_csv("destruction_counts.csv", index=False)
+
+
+# --- What-If Scenario: Replace wood decks with masonry ---
+
+infra_deck_upgrade = infrastructure_gdf.copy()
+
+# Apply reduced flammability if deck is wood
+infra_deck_upgrade.loc[
+    infra_deck_upgrade['* Deck/Porch On Grade'] == 'Wood', 'Composite_Flammability'
+] = 0.3
+
+# Run the simulation
+event_log_deck_upgrade = simulate_fire_impact(
+    infra_deck_upgrade,
+    flammability_column="Composite_Flammability",
+    scenario_name="no_wood_decks"
+)
+
+# Combine all event logs
+event_log_combined = pd.concat([
+    event_log_baseline,
+    event_log_ir_siding,
+    event_log_deck_upgrade
+], ignore_index=True)
+
+summary_by_scenario = (
+    event_log_combined[event_log_combined['Event'] == 'Destroyed']
+    .groupby("Scenario")["Case_ID"]
+    .nunique()
+    .reset_index(name="Structures_Destroyed")
+)
+
+print(summary_by_scenario)
+
+# Bar plot showing structures destroyed per scenario
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 5))
+plt.bar(summary_by_scenario["Scenario"], summary_by_scenario["Structures_Destroyed"], color=['gray', 'green', 'blue'])
+plt.title("Structures Destroyed by Scenario")
+plt.xlabel("Scenario")
+plt.ylabel("Number of Structures Destroyed")
+plt.grid(axis='y', linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# Timeline plot showing the destruction over time
+timeline = (
+    event_log_combined[event_log_combined['Event'] == 'Destroyed']
+    .groupby(["Scenario", pd.Grouper(key="Timestamp", freq="6h")])
+    .size()
+    .reset_index(name="Destroyed_Count")
+)
+
+# Plot timeline
+plt.figure(figsize=(10, 6))
+
+for scenario in timeline['Scenario'].unique():
+    subset = timeline[timeline['Scenario'] == scenario]
+    plt.plot(subset['Timestamp'], subset['Destroyed_Count'], label=scenario)
+
+plt.title("Destruction Over Time by Scenario")
+plt.xlabel("Timestamp")
+plt.ylabel("# Structures Destroyed")
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.tight_layout()
+plt.show()
+
+# Save the scenario summary
+summary_by_scenario.to_csv("summary_destruction_by_scenario.csv", index=False)
+event_log_combined.to_csv("event_log_combined.csv", index=False)
