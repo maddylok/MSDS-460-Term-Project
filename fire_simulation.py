@@ -385,3 +385,84 @@ GeoJson(
 ).add_to(m)
 
 m.save("fire_simulation_timeline_map.html")
+
+# --- Area-Based Fire Spread Simulation ---
+# While the previous simulation can be informative, it is not performant, and freezes a lot.
+# Using an area-based simulation will look smoother and be more performant.
+
+from shapely.geometry import mapping
+from shapely.ops import unary_union
+from folium.plugins import TimestampedGeoJson
+import folium
+
+fire_progression_gdf['Fire_Timestamp'] = fire_progression_gdf['Fire_Timestamp'].apply(
+    lambda dt: dt.replace(year=2018) if pd.notnull(dt) else pd.NaT
+)
+
+# Round the timestamps to the nearest hour for aggregation
+fire_progression_gdf['Time_Bin'] = pd.to_datetime(fire_progression_gdf['Fire_Timestamp']).dt.floor('h')
+
+# Generate the fire zones
+fire_zones = []
+for time_bin, group in fire_progression_gdf.groupby('Time_Bin'):
+    if group.empty:
+        continue
+    
+    # Create buffer zones around the fire points
+    buffered = group.geometry.buffer(800) # 800 meters
+    merged_zone = unary_union(buffered)
+    
+    if merged_zone.is_empty:
+        continue
+    
+    # Reproject the merged zone back to EPSG:4326
+    merged_latlon = gpd.GeoSeries([merged_zone], crs=3310).to_crs(epsg=4326).iloc[0]
+    
+    # Wrap outputs as FeatureCollection
+    fire_zones.append({
+        "type": "Feature",
+        "geometry": mapping(merged_latlon),
+        "properties": {
+            "time": time_bin.isoformat(),
+            "style": {
+                "color": "orange",
+                "weight": 1,
+                "fillColor": "red",
+                "fillOpacity": 0.4
+            }
+        }
+    })
+
+# Center the map on the fire zone
+center = fire_progression_gdf.to_crs(epsg=4326).geometry.union_all().centroid
+m = folium.Map(location=[center.y, center.x], zoom_start=11, tiles="CartoDB positron")
+
+# Add the fire perimeter
+fire_perimeter_wgs84 = fire_perimeter.to_crs(epsg=4326)[['geometry']]
+folium.GeoJson(
+    fire_perimeter_wgs84,
+    name="Fire Perimeter",
+    style_function=lambda feature: {
+        "color": "red",
+        "weight": 2,
+        "fillOpacity": 0,
+    }
+).add_to(m)
+
+# Add the animated fire zones
+TimestampedGeoJson(
+    {
+        "type": "FeatureCollection",
+        "features": fire_zones
+    },
+    period="PT1H",
+    add_last_point=True,
+    auto_play=False,
+    loop=False,
+    max_speed=1,
+    loop_button=True,
+    date_options="YYYY-MM-DD HH:mm",
+    time_slider_drag_update=True
+).add_to(m)
+
+m.save("fire_area_progression_map.html")
