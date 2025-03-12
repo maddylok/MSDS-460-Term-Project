@@ -45,8 +45,9 @@ theme: rose-pine-dawn
 - **Visualizations**: 
     - Heatmap of fire intensities in LA
     - Timelapse animation of fire spread in Los Angeles in 2018
-    - Fire progression and structural damage of Camp Fire
+    - Fire progression and structural damage of Camp Fire ![image](fire_intensity_heatmap.png)
     - Animated map of Camp Fire progression
+  
 
 
 

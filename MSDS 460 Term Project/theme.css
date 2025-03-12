@@ -61,7 +61,7 @@ a {
     color: var(--iris);
 }
 p {
-    font-size: 20pt;
+    font-size: 10pt;
     font-weight: 600;
     color: var(--text);
 }
@@ -93,6 +93,7 @@ marp-pre {
     background-color: var(--overlay);
     border-color: var(--highlight-high);
 }
+
 
 /* Code blok */
 .hljs-comment {
