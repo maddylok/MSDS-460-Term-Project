@@ -1,0 +1,11 @@
+allowLocalFiles: true
+pdf: false
+html: true
+theme: 'theme.css'
+bespoke:
+  progress: true
+options: 
+  looseYAML: false
+  markdown:
+    breaks: false
+lang: en-US
