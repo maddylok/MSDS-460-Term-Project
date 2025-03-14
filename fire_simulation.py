@@ -1,4 +1,6 @@
+# ---------------------
 # --- Load the Data ---
+# ---------------------
 import geopandas as gpd
 import pandas as pd
 
@@ -20,7 +22,10 @@ print("\nInfrastructure Damage CSV Columns:")
 print(infrastructure.columns)
 print(infrastructure.head())
 
+# -------------------------------------
 # --- Convert CSVs to GeoDataFrames ---
+# -------------------------------------
+
 from shapely.geometry import Point
 
 # Convert the Fire Progression CSV to GeoDataFrame
@@ -41,7 +46,10 @@ print("\nFire perimeter CRS:", fire_perimeter.crs)
 fire_progression_gdf = fire_progression_gdf.to_crs(fire_perimeter.crs)
 infrastructure_gdf = infrastructure_gdf.to_crs(fire_perimeter.crs)
 
+# --------------------------
 # --- Visualize the Data ---
+# --------------------------
+
 import matplotlib.pyplot as plt
 import contextily as ctx
 
@@ -106,7 +114,10 @@ infrastructure_gdf['Distance_To_FirePoint'] = distances
 
 print(infrastructure_gdf[['Fire_Arrival_Time', 'Distance_To_FirePoint']].head())
 
+# ------------------------------------------------------------
 # --- Run Simulation Using Pre-Defined Flammability Scores ---
+# ------------------------------------------------------------
+
 # In this section, we will simulate fire progression based on a pre-defined flammability score for each structure material.
 
 # Extract the material types for each section of the infrastructure
@@ -168,7 +179,9 @@ def compute_flammability(row):
 
 infrastructure_gdf['Composite_Flammability'] = infrastructure_gdf.apply(compute_flammability, axis=1)
 
+# --------------------------------------------------------------------------------------------
 # --- Simulation Loop Using Composite Flammability and Distance-Based Delay Implementation ---
+# --------------------------------------------------------------------------------------------
 
 import random
 from datetime import timedelta
@@ -305,7 +318,9 @@ deck2_comparison.to_csv("comparison_deck2.csv", index=False)
 
 print("\nSaved comparison tables as CSV files.")
 
+# -----------------------------------------
 # --- Visualize the Simulation on a Map ---
+# -----------------------------------------
 
 import folium
 from folium.plugins import TimestampedGeoJson
@@ -385,7 +400,9 @@ GeoJson(
 
 m.save("fire_simulation_timeline_map.html")
 
+# -----------------------------------------
 # --- Area-Based Fire Spread Simulation ---
+# -----------------------------------------
 # While the previous simulation can be informative, it is not performant, and freezes a lot.
 # Using an area-based simulation will look smoother and be more performant.
 
@@ -465,7 +482,10 @@ TimestampedGeoJson(
 
 m.save("fire_area_progression_map.html")
 
+# -----------------------------------
 # --- Modular Simulation Function ---
+# -----------------------------------
+
 # We create a modular simulation function that allows us to modify structure variables to run what-if scenarios.
 
 def simulate_fire_impact(
@@ -528,7 +548,9 @@ def simulate_fire_impact(
 
     return event_log_df
 
+# -------------------------------------------------------
 # --- What-If Scenario: All Ignition-Resistant Siding ---
+# -------------------------------------------------------
 
 # Copy the original infrastructure data
 infra_ir_siding = infrastructure_gdf.copy()
@@ -555,8 +577,9 @@ print(summary_destruction_by_scenario)
 
 event_log_combined.to_csv("destruction_counts.csv", index=False)
 
-
+# ---------------------------------------------------------
 # --- What-If Scenario: Replace wood decks with masonry ---
+# ---------------------------------------------------------
 
 infra_deck_upgrade = infrastructure_gdf.copy()
 
